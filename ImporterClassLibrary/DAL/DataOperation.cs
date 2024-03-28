@@ -14,7 +14,6 @@ namespace ImporterClassLibrary.DAL
         {
             Console.WriteLine("Starting import data from excel processs");
             string excelFilePath = @"C:\Users\tafad\OneDrive\Documents\data.xlsx";
-            InvoiceContext context = new InvoiceContext();
 
             using (var stream = File.Open(excelFilePath, FileMode.Open, FileAccess.Read))
             using (var reader = ExcelReaderFactory.CreateReader(stream))
@@ -22,43 +21,53 @@ namespace ImporterClassLibrary.DAL
                 // Skip header row
                 reader.Read();
 
-                while (reader.Read())
+                using (var dbContext = new InvoiceContext())
+                using (var transaction = dbContext.Database.BeginTransaction())
                 {
-                    
-                    
-                        string invoiceNumber = reader.GetValue(0)?.ToString();
-                        string address = reader.GetValue(2)?.ToString();
-
-                        string dateString = reader.GetValue(1)?.ToString().Trim();
-                        DateTime invoiceDate;
-
-                        if (DateTime.TryParseExact(dateString, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out invoiceDate)
-                            || DateTime.TryParseExact(dateString, "yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out invoiceDate))
+                    try
+                    {
+                        while (reader.Read())
                         {
-                            // Parsing successful
-                            Console.WriteLine(invoiceDate);
-                        }
-                        else
-                        {
-                            // Parsing failed
-                            Console.WriteLine("Failed to parse date string: " + dateString);
-                        }
+                            string invoiceNumber = reader.GetValue(0)?.ToString();
+                            string address = reader.GetValue(2)?.ToString();
+                            DateTime invoiceDate;
+                            double invoiceTotalExVAT;
+                            string lineDescription;
+                            double invoiceQuantity;
+                            double unitSellingPriceExVAT;
 
-                        string invoiceTotalStringValue = reader.GetValue(3)?.ToString();
-                        double invoiceTotalExVAT = double.Parse(invoiceTotalStringValue.Trim(), CultureInfo.InvariantCulture);
+                            //Parse Values
+                            string dateString = reader.GetValue(1)?.ToString().Trim();
+                            if (!DateTime.TryParseExact(dateString, new[] { "dd/MM/yyyy HH:mm", "yyyy/MM/dd HH:mm:ss" },
+                                CultureInfo.InvariantCulture, DateTimeStyles.None, out invoiceDate))
+                            {
+                                Console.WriteLine("Failed to parse date string: " + dateString);
+                                continue; 
+                            }
 
-                        string lineDescription = reader.GetValue(4)?.ToString();
+                            
+                            if (!double.TryParse(reader.GetValue(3)?.ToString().Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out invoiceTotalExVAT))
+                            {
+                                Console.WriteLine("Failed to parse invoice total: " + reader.GetValue(3)?.ToString().Trim());
+                                continue; 
+                            }
 
-                        double invoiceQuantity = double.Parse(reader.GetValue(5)?.ToString());
-                        
-                        string unitSellingStringVal = reader.GetValue(6)?.ToString();   
-                        double unitSellingPriceExVAT = double.Parse(unitSellingStringVal.Trim(), CultureInfo.InvariantCulture);
+                            lineDescription = reader.GetValue(4)?.ToString();
 
-                    // Add data to the database
-                    using (var dbContext = new InvoiceContext())
-                        {
+                            
+                            if (!double.TryParse(reader.GetValue(5)?.ToString().Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out invoiceQuantity))
+                            {
+                                Console.WriteLine("Failed to parse invoice quantity: " + reader.GetValue(5)?.ToString().Trim());
+                                continue;
+                            }
+                                                        
+                            if (!double.TryParse(reader.GetValue(6)?.ToString().Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out unitSellingPriceExVAT))
+                            {
+                                Console.WriteLine("Failed to parse unit selling price: " + reader.GetValue(6)?.ToString().Trim());
+                                continue; 
+                            }
+
                             var existingInvoice = dbContext.InvoiceHeaders.FirstOrDefault(i => i.InvoiceNumber == invoiceNumber);
-                            // var eInvoive = dbContext.InvoiceHeaders.FirstOrDefault(i => i.InvoiceNumber == invoiceNumber);
 
                             if (existingInvoice == null)
                             {
@@ -71,7 +80,6 @@ namespace ImporterClassLibrary.DAL
                                 };
 
                                 dbContext.InvoiceHeaders.Add(newInvoice);
-                                dbContext.SaveChanges();
                             }
 
                             var newInvoiceLine = new InvoiceLine
@@ -83,15 +91,34 @@ namespace ImporterClassLibrary.DAL
                             };
 
                             dbContext.InvoiceLines.Add(newInvoiceLine);
-                            dbContext.SaveChanges();
-                            Console.WriteLine("done with import operation");
                         }
-                  //  }
-                   
 
-                    
+                        dbContext.SaveChanges();
+                        transaction.Commit();
+                                                
+                        var invoiceSummaries = dbContext.InvoiceLines
+                            .GroupBy(l => l.InvoiceNumber)
+                            .Select(g => new
+                            {
+                                InvoiceNumber = g.Key,
+                                TotalQuantity = g.Sum(l => l.Quantity)
+                            });
+
+                        foreach (var summary in invoiceSummaries)
+                        {
+                            Console.WriteLine($"Invoice Number: {summary.InvoiceNumber}, Total Quantity: {summary.TotalQuantity}");
+                        }
+
+                        Console.WriteLine("Import operation completed successfully.");
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        Console.WriteLine("An error occurred during the import process: " + ex.Message);
+                    }
                 }
             }
         }
+
     }
 }
