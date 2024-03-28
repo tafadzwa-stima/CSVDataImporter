@@ -1,18 +1,20 @@
-﻿using System;
-using ClosedXML.Excel;
+﻿using ClosedXML.Excel;
+using System;
 using System.IO;
 
-namespace DataImporterCL.DAL
+namespace ImporterClassLibrary
 {
-    public static class DataImporter
+    public static class DataImpoter
     {
-        public static void ConvertCsvToExcel()
+        public static void ConvertToCsvToExcel() 
         {
-
+            Console.WriteLine("try ");
             Console.WriteLine("Starting operation ");
-            string csvFilePath = @"C:\src\Decofurn\DecofurnDataImporter\data.csv";
-            string excelFilePath = @"C:\src\Decofurn\DecofurnDataImporter\datasample.xlsx";
-            
+            string csvFilePath = @"C:\Users\tafad\OneDrive\Documents\data.csv";
+            string excelFilePath = @"C:\Users\tafad\OneDrive\Documents\data.xlsx";
+            //"data.xlsx";
+
+
             using (var workbook = new XLWorkbook())
             {
                 var worksheet = workbook.Worksheets.Add("Data");

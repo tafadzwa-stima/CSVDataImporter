@@ -33,8 +33,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DataImporterCL">
-      <HintPath>..\DataImporterCL\bin\Debug\DataImporterCL.dll</HintPath>
+    <Reference Include="ImporterClassLibrary, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ImporterClassLibrary\bin\Debug\ImporterClassLibrary.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

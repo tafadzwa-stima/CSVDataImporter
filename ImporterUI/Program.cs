@@ -1,5 +1,5 @@
-﻿using DataImporterCL.DAL;
-using System;
+﻿using System;
+using ImporterClassLibrary;
 
 namespace ImporterUI
 {
@@ -7,15 +7,11 @@ namespace ImporterUI
     {
         static void Main(string[] args)
         {
-			try
-			{
-				DataImporter.ConvertCsvToExcel();
-			}
-			catch (System.Exception ex)
-			{
 
-				Console.WriteLine(ex.Message);
-			}
+
+            DataImpoter.ConvertToCsvToExcel();
+            Console.ReadKey();
+
 
         }
     }
