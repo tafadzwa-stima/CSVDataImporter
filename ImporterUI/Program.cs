@@ -1,5 +1,6 @@
 ﻿using System;
 using ImporterClassLibrary;
+using ImporterClassLibrary.DAL;
 
 namespace ImporterUI
 {
@@ -9,7 +10,9 @@ namespace ImporterUI
         {
 
 
-            DataImpoter.ConvertToCsvToExcel();
+            //DataImpoter.ConvertToCsvToExcel();
+
+            DataOperation.ImportDataFromExcel();
             Console.ReadKey();
 
 
