@@ -8,36 +8,45 @@ namespace ImporterClassLibrary
     {
         public static void ConvertToCsvToExcel() 
         {
-            Console.WriteLine("try ");
+            
             Console.WriteLine("Starting operation ");
             string csvFilePath = @"C:\Users\tafad\OneDrive\Documents\data.csv";
             string excelFilePath = @"C:\Users\tafad\OneDrive\Documents\data.xlsx";
             //"data.xlsx";
 
-
-            using (var workbook = new XLWorkbook())
+            try
             {
-                var worksheet = workbook.Worksheets.Add("Data");
-
-                using (var reader = new StreamReader(csvFilePath))
+                using (var workbook = new XLWorkbook())
                 {
-                    int row = 1;
-                    while (!reader.EndOfStream)
+                    var worksheet = workbook.Worksheets.Add("Data");
+
+                    using (var reader = new StreamReader(csvFilePath))
                     {
-                        string line = reader.ReadLine();
-                        string[] values = line.Split(',');
-
-                        for (int i = 0; i < values.Length; i++)
+                        int row = 1;
+                        while (!reader.EndOfStream)
                         {
-                            worksheet.Cell(row, i + 1).Value = values[i];
+                            string line = reader.ReadLine();
+                            string[] values = line.Split(',');
+
+                            for (int i = 0; i < values.Length; i++)
+                            {
+                                worksheet.Cell(row, i + 1).Value = values[i];
+                            }
+
+                            row++;
                         }
-
-                        row++;
                     }
-                }
 
-                workbook.SaveAs(excelFilePath);
+                    workbook.SaveAs(excelFilePath);
+                }
             }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine($"There was an error comverting file{ex.Message}"); ;
+            }
+            
+            
             Console.WriteLine("completed Operation ");
         }
     }
