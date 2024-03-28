@@ -11,8 +11,10 @@ namespace ImporterUI
 
 
             //DataImpoter.ConvertToCsvToExcel();
+            //DataOperation.ImportDataFromExcel();
+            //DataOperation.DisplayInvoiceSummaries();
 
-            DataOperation.ImportDataFromExcel();
+           // DataOperation.VerifyBalance();
             Console.ReadKey();
 
 

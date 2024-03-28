@@ -9,7 +9,7 @@ using System.Linq;
 namespace ImporterClassLibrary.DAL
 {
     public class DataOperation : DropCreateDatabaseIfModelChanges<InvoiceContext>
-    {
+    {       
         public static void ImportDataFromExcel()
         {
             Console.WriteLine("Starting import data from excel processs");
@@ -116,6 +116,45 @@ namespace ImporterClassLibrary.DAL
                         transaction.Rollback();
                         Console.WriteLine("An error occurred during the import process: " + ex.Message);
                     }
+                }
+            }
+        }
+
+        public static void DisplayInvoiceSummaries()
+        {
+            using (var dbContext = new InvoiceContext())
+            {
+                var summaries = dbContext.InvoiceLines
+                    .GroupBy(l => l.InvoiceNumber)
+                    .Select(g => new
+                    {
+                        InvoiceNumber = g.Key,
+                        TotalQuantity = g.Sum(l => l.Quantity)
+                    });
+
+                foreach (var summary in summaries)
+                {
+                    Console.WriteLine($"Invoice Number: {summary.InvoiceNumber}, Total Quantity: {summary.TotalQuantity}");
+                }
+            }
+        }
+
+        public static void VerifyBalance()
+        {
+            using (var dbContext = new InvoiceContext())
+            {
+                var totalFromDatabase = dbContext.InvoiceLines.Sum(l => l.Quantity * l.UnitSellingPriceExVAT);
+
+                // Balance from CSV file
+                var totalFromCsv = 21860.71f; 
+
+                if (totalFromDatabase == totalFromCsv)
+                {
+                    Console.WriteLine("Balance verified: The totals match.");
+                }
+                else
+                {
+                    Console.WriteLine($"Balance mismatch: Total from database ({totalFromDatabase}) does not match total from CSV ({totalFromCsv}).");
                 }
             }
         }
